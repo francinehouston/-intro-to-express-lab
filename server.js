@@ -1,7 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 
-const app = express();
+
 
 // Use Morgan middleware with the 'dev' option for concise output
 app.use(morgan('dev'));
@@ -21,11 +21,20 @@ app.listen(3001, () => {
 
 //Response: Include the username from the URL in the response, such as “Hello there, Christy!” or “What a delight it is to see you once more, Mathilda.”/</username-parameter>
 
-app.get('/greetings/:name',(req,res) => {
-    console.log(req.params.name);
+app.get('/greetings/:username',(req,res) => {
+    const username= (req.params.username);
 
      //Sending a response with parameter
-  res.send(`<h1>Hello, ${req.params.name}!<h1>`);
+  res.send(`Hello there, ${username}! What a delight it is to see you once more!`);
+});
+
+
+
+app.get('/greetings/:name',(req,res) => {
+  console.log(req.params.name);
+
+   //Sending a response with parameter
+res.send(`<h1>Hello there, ${req.params.name}!</h1>`);
 });
 
 // 2. Rolling the Dice
@@ -37,11 +46,29 @@ app.get('/greetings/:name',(req,res) => {
 
 // Functionality: If a valid number is provided, respond with a random whole number between 0 and the given number. For example, a request to /roll/16 might respond with “You rolled a 14.”
 
+// Route to handle roll requests
+app.get('/roll/:number', (req, res) => {
+  const numberParam = req.params.number;
+
+  // Validate that the parameter is a number
+  const maxNumber = parseInt(numberParam, 10);
+  if (isNaN(maxNumber)) {
+      return res.send("You must specify a number.");
+  }
+
+
+// Generate a random number between 0 and the given number (inclusive)
+const rolledNumber = Math.floor(Math.random() * (maxNumber + 1));
+res.send('You rolled a ${rolledNumber}.');
+});
+
 app.get('/roll/:number', (req, res) => {
   const number = parseInt(req.params.number, 10);
-  // You can use the number parameter here
-  const result = number;  // Simulate a roll (you could use a random number generator instead)
-  res.send(`You rolled a ${result}`);
+  if (isNaN(number) || number <= 0) {
+    return res.status(400).send('You must specify a positive number.');
+  }
+  const roll = Math.floor(Math.random() * number) + 1;
+  res.send(`You rolled a ${roll}`);
 });
 
 
@@ -60,9 +87,13 @@ const collectibles = [
 
   app.get('/collectibles/:index', (req, res) => {
     const index = parseInt(req.params.index, 10);
-    // You can use the index to fetch a collectible from a list or database
-    res.send(`You are viewing collectible #${index}`);
-  });
+
+    if (isNaN(index) || index < 0 || index >= collectibles.length) {
+      return res.status(404).send('This collectible is not available.');
+    }
+    const item = collectibles[index];
+  res.send(`So you want the ${item.name}? It's priced at $${item.price}.`);
+  }) ;
 
 
 
@@ -76,9 +107,8 @@ const collectibles = [
 //type: Shows only shoes of the specified type.
 //No parameters: Responds with the full list of shoes.
 
-app.get('/hello', (req, res) => {
-    res.send(`Hello there, ${req.query.name}! I hear you are ${req.query.type} years old!`);
-});
+const express = require('express');
+const app = express();
 
 const shoes = [
     { name: "Birkenstocks", price: 50, type: "sandal" },
@@ -89,19 +119,21 @@ const shoes = [
     { name: "Jet Boots", price: 1000, type: "boot" },
     { name: "Fifty-Inch Heels", price: 175, type: "heel" }
 ];
-app.get('/shoes', (req, res) => {
-  let filteredShoes = shoes;
-
+app.get('/shoes', (req, res) => {  
+  let { 'min-price': minPrice, 'max-price': maxPrice, type } = req.query;
+let filteredShoes = shoes;
   // Get query parameters
-  const minPrice = parseFloat(req.query['min-price']);
-  const maxPrice = parseFloat(req.query['max-price']);
-  const type = req.query['type'];
+  //const minPrice = parseFloat(req.query['min-price']);
+  //const maxPrice = parseFloat(req.query['max-price']);
+  //const type = req.query['type'];
 
   // Apply filters based on query parameters
   if (minPrice) {
+    minPrice = parseFloat(minPrice);
     filteredShoes = filteredShoes.filter(shoe => shoe.price >= minPrice);
   }
   if (maxPrice) {
+    maxPrice = parseFloat(maxPrice);
     filteredShoes = filteredShoes.filter(shoe => shoe.price <= maxPrice);
   }
   if (type) {
@@ -109,4 +141,10 @@ app.get('/shoes', (req, res) => {
   }
 
   res.json(filteredShoes);
+});
+
+// Start the server 
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
