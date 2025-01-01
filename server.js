@@ -98,6 +98,25 @@ const collectibles = [
 
 
 
+
+// Route to handle requests for a specific collectible
+app.get('/collectibles/:index', (req, res) => {
+    const index = parseInt(req.params.index, 10); // Parse the index from the URL parameter
+
+    // Validate index
+    if (isNaN(index) || index < 0 || index >= collectibles.length) {
+        return res.status(404).send("Collectible not found.");
+    }
+
+    // Respond with the collectible at the specified index
+    const collectible = collectibles[index];
+    res.json(collectible);
+});
+
+
+
+
+
   //4. Task: Create a route /shoes that filters the list of shoes based on query parameters.
 
 //Query Parameters:
